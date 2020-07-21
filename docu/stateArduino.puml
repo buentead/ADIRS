@@ -1,0 +1,26 @@
+@startuml
+scale 800*600
+hide empty description
+[*] --> State0
+State0 : FLightSim not connected
+State0 --> State1 : sendHeartbeat
+State1 : wait for FS comm version
+State1 --> State2 : rcvFSVersion
+State2 : check FS comm version
+State2 --> State0 : sndNAK
+State2 --> State3 : sndACK
+State3 : FlightSim connected
+State3 --> State0 : timeout: no data received
+State3 --> State4 : gDataAvailable == true
+State4 : Process command
+State4 --> State4 : sndACK
+State4 --> State4 : sndNAK
+State4 --> State3 : gDataAvailable == false
+State3 --> State5 : sndADRotary
+State4 --> State5 : sndADRotary
+State5 : Wait for ACK
+State5 --> State3 : rcvACK
+State5 --> State3 : rcvNAK
+State5 --> State3 : timeout
+}
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+scale 800*600
+hide empty description
+[*] --> State1
+State1 : Waiting for Arduino
+State1 --> State2 : rcvADVersion
+State2 : Verify protocol version
+State2 --> State1 : sndNAK
+State2 --> State3 : sndFSVersion
+State3 : Wait for Arduino ACK
+State3 --> State1 : rcvNAK
+State3 --> State2 : rcvADVersion
+State3 --> State4 : rcvACK
+State4 : Communication established
+State4 --> State2 : rcvADVersion
+}
+@enduml

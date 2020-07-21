@@ -1,0 +1,55 @@
+@startuml
+scale 800*600
+hide empty description
+[*] --> DisplayOffOn
+
+state DisplayOffOn {
+  [*] --> State1
+  State1 : Display OFF
+  State1 --> State1 : evtBATxOFF
+  State1 --> State1 : evtBATxVolt
+  State1 --> State2 : evtBATxON
+  State2: Ready to send 'display ON'
+  State2 --> State1 : evtBATxOFF
+  State2 --> State2 : evtBATxVolt
+  State2 --> State3 : sndBATxON
+  State3 : Wait for 'display ON' ACK
+  State3 --> State3 : evtBATxVolt
+  State3 --> State2 : rcvNAK
+  State3 --> State2 : timeout
+  State3 --> State4 : evtBATxOFF
+  State4 : Unexpected 'display OFF'
+  State4 --> State4 : evtBATxVolt
+  State4 --> State5 : rcvACK
+  State5 : Ready to send 'display OFF'
+  State4 --> State5 : rcvNAK
+  State4 --> State5 : timeout
+  State5 --> State5 : evtBATxVolt
+  State5 --> State6 : sndBATxOFF
+  State6 : Wait for 'display OFF' ACK
+  State6 --> State6 : evtBATxVolt
+  State6 --> State5 : rcvNAK
+  State6 --> State5 : timeout
+  State6 --> State1 : rcvACK
+  State3 --> DisplayVolt : rcvACK
+}
+
+state DisplayVolt {
+  [*] --> State11
+  State11 : Ready to send 'volt value'
+  State11 --> State11 : evtBATxVolt
+  State11 --> State11 : rcvACK
+  State11 --> State11 : rcvNAK
+  State11 --> State5 : evtBATxOFF
+  State11 --> State12 : sndBATxVolt
+  State12 : Wait for 'volt value' ACK
+  State12 --> State11 : timeout
+  State12 --> State11 : evtBATxVolt
+  State12 --> State11 : rcvNAK
+  State12 --> State4 : evtBATxOFF
+  State12 --> State13 : rcvACK
+  State13 : 'Volt value' is up to date
+  State13 --> State11 : evtBATxVolt
+  State13 --> State5 : evtBATxOFF
+}
+@enduml
