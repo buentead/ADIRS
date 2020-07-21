@@ -1,10 +1,8 @@
---
--- Created by IntelliJ IDEA.
--- User: buentead
--- Date: 17/07/2020
--- Time: 11:31
--- To change this template use File | Settings | File Templates.
---
+----------------------------------------------------------------------
+-- rotary.lua
+----------------------------------------------------------------------
+-- This module processes the newly reported position of the rotary
+-- switches from the ADITS panel: 'DATA' and 'SYS'
 
 local rotary = {}
 -- local variables

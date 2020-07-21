@@ -1,10 +1,8 @@
---
--- Created by IntelliJ IDEA.
--- User: buentead
--- Date: 11/07/2020
--- Time: 17:19
--- To change this template use File | Settings | File Templates.
---
+----------------------------------------------------------------------
+-- battery.lua
+----------------------------------------------------------------------
+-- This module keeps track of the battery states (see stateBattery.puml)
+-- and updates the voltage information on the BAT1 and BAT2 display
 
 local battery = {}
 

@@ -1,16 +1,13 @@
---
--- Created by IntelliJ IDEA.
--- User: buentead
--- Date: 11/07/2020
--- Time: 17:22
--- To change this template use File | Settings | File Templates.
---
+----------------------------------------------------------------------
+-- unitTesting.lua
+----------------------------------------------------------------------
+-- Testing all functions of the modules called by the main FSUIPC scripts ADIRS.lua
 
 lunit     = require('luaunit')
-bat       = require('lib/battery')
-rotary    = require('lib/rotary')
-handshake = require('lib/handshake')
-data      = require('lib/sendReceiveData')
+bat       = require('modules/lib/battery')
+rotary    = require('modules/lib/rotary')
+handshake = require('modules/lib/handshake')
+data      = require('modules/lib/sendReceiveData')
 
 bat.setDataCom(data)                     -- set instance to send data
 rotary.setDataCom(data)                  -- set instance to send data
@@ -20,6 +17,9 @@ Test010Handshake = {}
     -- establish connection
     local _msg  = ''
     local _init = false
+    local _bat  = ''
+    local _volt = ''
+    local _stat  = 0
     function Test010Handshake:test010()
         _msg = data.rcvData('ADVer,1.00')
         lunit.assertEquals(_msg,'ADVer,1.00')
@@ -124,17 +124,17 @@ Test020Battery = {}
         lunit.assertEquals(_bat,'BA1')
         lunit.assertEquals(_volt,279)
         lunit.assertEquals(_stat,11)
-        bat.evtBATxON('BA2')    -- switch on BA2 display
-        bat.evtBATxON('BA1')    -- no impact, as BA1 is already in state 11 (previous test200)
-        _bat, _stat = bat.sndBATData()  -- will send volt 27.9 of BA1
+        bat.evtBATxON('BA2')                -- switch on BA2 display
+        bat.evtBATxON('BA1')                -- no impact, as BA1 is already in state 11 (previous test200)
+        _bat, _stat = bat.sndBATData()      -- will send volt 27.9 of BA1
         lunit.assertEquals(_bat,'BA1')
         lunit.assertEquals(_stat,12)
         data.rcvData('ADACK')
-        _bat, _stat = bat.sndBATData()  -- will switch on BA1 display
+        _bat, _stat = bat.sndBATData()      -- will switch on BA1 display
         lunit.assertEquals(_bat,'BA2')
         lunit.assertEquals(_stat,3)
         data.rcvData('ADACK')
-        _bat, _stat = bat.sndBATData()  --  send volt 27.5 of BA2
+        _bat, _stat = bat.sndBATData()      --  send volt 27.5 of BA2
         lunit.assertEquals(_bat,'BA2')
         lunit.assertEquals(_stat,12)
         data.rcvData('ADACK')

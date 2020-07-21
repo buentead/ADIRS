@@ -1,10 +1,8 @@
---
--- Created by IntelliJ IDEA.
--- User: buentead
--- Date: 15/07/2020
--- Time: 15:51
--- To change this template use File | Settings | File Templates.
---
+----------------------------------------------------------------------
+-- ADIRS.lua
+----------------------------------------------------------------------
+-- Main script executed by FSUIPC or WideFS, which communicates with
+-- the Flight Simulator and with the Arduino MEGA 2560 board
 
 -- load required muodules
 bat       = require('lib/battery')

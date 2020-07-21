@@ -1,15 +1,13 @@
---
--- Created by IntelliJ IDEA.
--- User: buentead
--- Date: 17/07/2020
--- Time: 11:31
--- To change this template use File | Settings | File Templates.
---
+----------------------------------------------------------------------
+-- handshake.lua
+----------------------------------------------------------------------
+-- This module establishes the communication with the Arduino board.
+-- It esnures a protocol restart when needed.
 
 local handshake = {}
 -- local variables
 local _serial
-local _bat    = require('lib/battery')
+local _bat    = require('modules/lib/battery')
 local _status = 1
 
 -- ---------------------------------

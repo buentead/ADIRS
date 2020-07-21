@@ -1,15 +1,13 @@
---
--- Created by IntelliJ IDEA.
--- User: buentead
--- Date: 15/07/2020
--- Time: 14:47
--- To change this template use File | Settings | File Templates.
---
+----------------------------------------------------------------------
+-- sendReceiveData.lua
+----------------------------------------------------------------------
+-- This module handles the serial protocol between the Arduino board and
+-- the LUA script ADIRS.lua called from FSUIPC.
 
 local sendReceiveData = {}
 -- local variables
-local _rotary    = require('lib/rotary')
-local _handshake = require('lib/handshake')
+local _rotary    = require('modules/lib/rotary')
+local _handshake = require('modules/lib/handshake')
 local _module               -- module waiting for ACK or NAK
 local _hCom        = 0      -- handler of serial interface
 local _fDataTX     = 0      -- function to display buffer in WideFS client
