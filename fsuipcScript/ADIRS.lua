@@ -18,7 +18,7 @@ function evtComData(hnd, strData, strLen)
     local i
     local _msg, _init = '', false
     i,_ = strData:find("%$")
-    -- verify if valid data and at least 5 bytes received
+    -- verify if valid data received
     if i > 0 then
         dataRX(strData:sub(i, -3))
         _msg = data.rcvData(strData:sub(i+1, -3))
@@ -95,7 +95,7 @@ handshake.setDataCom(data)               -- set instance to send data
 display.show(hWnd, 1, "Set events")
 event.sim(CLOSE, "evtSimClose")             -- Flight Simulate closed
 event.com(hCom, 20, -1, 10, "evtComData")   -- wait for the 'LF' sign
-event.timer(200, "evtSendData")             -- send data if required
+event.timer(140, "evtSendData")             -- send data if required (max time ADIRS display 270ms)
 event.offset(0x73BC, "SW", "evtBAT1")       -- BAT1 0x73BC "SW" - voltage * 10
 event.offset(0x73BE, "SW", "evtBAT2")       -- BAT2 0x73BE "SW" - voltage * 10
 display.show(hWnd, 1, "Initialize completed")
