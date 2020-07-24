@@ -5,7 +5,6 @@ hide empty description
 State1 : Rotary position unknown
 State1 --> State2 : rcvRotaryPos
 State2 : pending ADIRS update
-State2 --> State1 : missing rotary position
 State2 --> State3 : rotarySYSoff
 State3 : ADIRS display off
 State3 --> State2 : rcvRotaryPos
@@ -25,5 +24,6 @@ State4 --> State6 : rcvACK
 State6 : ADIRS display up to date
 State6 --> State2 : rcvRotaryPos
 State6 --> State2 : rcvFSUpdShown
+State6 --> State3 : rotarySYSoff
 }
 @enduml

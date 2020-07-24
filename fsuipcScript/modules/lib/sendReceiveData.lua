@@ -93,7 +93,7 @@ local function _rcvData(strData,test)
         _waitForACK = 0
     elseif strData:sub(1, 5) == "ADROT" then
         -- Rotary Positions received from Arduino: "ADROT,[0..1],[0..9]"
-        _rot = tonumber(strData:sub(-3,-3)) + 1
+        _rot = tonumber(strData:sub(-3,-3))
         _pos = tonumber(strData:sub(-1,-1))
         _rotary.setRotary(_rot,_pos,test)
     else
