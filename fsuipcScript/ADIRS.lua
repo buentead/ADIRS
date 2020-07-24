@@ -7,6 +7,7 @@
 -- load required muodules
 bat       = require('lib/battery')
 rotary    = require('lib/rotary')
+adirs     = require('lib/adirsDisplay')
 handshake = require('lib/handshake')
 data      = require('lib/sendReceiveData')
 
@@ -47,6 +48,16 @@ function evtBAT2(pOffset, pValue)
     bat.evtBATxVolt('BA2', pValue)
 end
 
+-- True Track (in degree)
+function evtTrueTrack(pOffset, pValue)
+    adirs.evtTrueTrack(math.floor(math.deg(pValue) + 0.5))
+end
+
+-- Ground Speed (knots)
+function evtGroundSpeed(pOffset, pValue)
+    adirs.evtGroundSpeed(math.floor((pValue / 65536 * 1.943844) + 0.5))
+end
+
 -- Logging data sent to Arduino
 function dataTX(msgTX)
     local _msg = "TX: '" .. msgTX .. "' - " .. os.date()
@@ -65,6 +76,8 @@ end
 function evtSimClose(pEvtType)
     event.cancel("evtBAT1")
     event.cancel("evtBAT2")
+    event.cancel("evtTrueTrack")
+    event.cancel("evtGroundSpeed")
     --    event.cancel("evtPosLAT")
     --    event.cancel("evtPosLON")
     --    event.cancel("evtMainPower")
@@ -93,9 +106,11 @@ rotary.setDataCom(data)                  -- set instance to send data
 handshake.setDataCom(data)               -- set instance to send data
 -- Set events
 display.show(hWnd, 1, "Set events")
-event.sim(CLOSE, "evtSimClose")             -- Flight Simulate closed
-event.com(hCom, 20, -1, 10, "evtComData")   -- wait for the 'LF' sign
-event.timer(140, "evtSendData")             -- send data if required (max time ADIRS display 270ms)
-event.offset(0x73BC, "SW", "evtBAT1")       -- BAT1 0x73BC "SW" - voltage * 10
-event.offset(0x73BE, "SW", "evtBAT2")       -- BAT2 0x73BE "SW" - voltage * 10
+event.sim(CLOSE, "evtSimClose")                 -- Flight Simulate closed
+event.com(hCom, 20, -1, 10, "evtComData")       -- wait for the 'LF' sign
+event.timer(140, "evtSendData")                 -- send data if required (max time ADIRS display 270ms)
+event.offset(0x73BC, "SW",  "evtBAT1")          -- BAT1 0x73BC "SW" - voltage * 10
+event.offset(0x73BE, "SW",  "evtBAT2")          -- BAT2 0x73BE "SW" - voltage * 10
+event.offset(0x6040, "DBL", "evtTrueTrack")     -- magnetic track in radians (deg = rad * 180/pi)
+event.offset(0x02B4, "SD",  "evtGroundSpeed")   -- ground speed as 65536*metres/sec
 display.show(hWnd, 1, "Initialize completed")

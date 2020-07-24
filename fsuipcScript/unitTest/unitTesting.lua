@@ -283,6 +283,37 @@ Test040Adirs = {}
         lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS display updated
         lunit.assertEquals(adirs.sndADIRSInfo(),nil)
     end
+    function Test040Adirs:test100()
+        lunit.assertEquals(data.rcvData('ADROT,0,1',true),'ADROT,0,1') -- internal DATA-TKGS
+        lunit.assertEquals(data.rcvData('ADROT,1,0',true),'ADROT,1,0') -- internal SYS-OFF
+        lunit.assertEquals(data.rcvData('ADROT,1,1',true),'ADROT,1,1') -- internal SYS-IR1
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,TKGS\r\n')
+        lunit.assertEquals(adirs.getStatus(),4)                        -- Status 4 - wait for 'ACK'
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS display updated
+        lunit.assertEquals(adirs.evtTrueTrack(180),'TK 180    GS   0')
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,TK 180    GS   0\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS display updated
+        lunit.assertEquals(adirs.evtGroundSpeed(250),'TK 180    GS 250')
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,TK 180    GS 250\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS display updated
+        lunit.assertEquals(data.rcvData('ADROT,0,0',true),'ADROT,0,0') -- internal DATA-TEST
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,888888888888888888888888\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS display updated
+        lunit.assertEquals(adirs.evtTrueTrack(90),'TK  90    GS 250')
+        lunit.assertEquals(adirs.sndADIRSInfo(),nil)
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS display updated
+        lunit.assertEquals(data.rcvData('ADROT,0,1',true),'ADROT,0,1') -- internal DATA-TKGS
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,TK  90    GS 250\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS display updated
+    end
 -- end of table 'Test040Adirs'
 
 os.exit( lunit.LuaUnit.run() )

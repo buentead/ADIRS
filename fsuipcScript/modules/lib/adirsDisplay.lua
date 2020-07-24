@@ -25,6 +25,9 @@ local _timeout = 1                                  -- timeout in seconds
 local _fProcessACK = 0
 local _fProcessNAK = 0
 
+-- instance values
+local _trueTrack   = 0
+local _groundSpeed = 0
 
 -- Set new Status
 local function _setStatus(status)
@@ -34,7 +37,7 @@ local function _setStatus(status)
         _status[1] = status
     end
     _status[2] = os.clock() + _timeout
-    if _status[1] ~= 4 and _status[2] ~= 5 then
+    if _status[1] ~= 4 and _status[1] ~= 5 then
         -- new status ignors ACK or NAK messages.
         _fProcessACK = 0
         _fProcessNAK = 0
@@ -66,7 +69,7 @@ local function _rcvRotaryPos(data,sys)
         _displayOn[2] = _rotSys[sys]
         _displayNewData = true
     end
-    if _displayNewData == true then
+    if _displayNewData then
         if (_status[1] == 4 or _status[1] == 5) then
             _statusNew = _setStatus(5)
         else
@@ -139,6 +142,48 @@ local function _rcvNAK()
     return _status[1]
 end
 
+-- ----------------------------------------------------
+-- Check if new data received currently being displayed
+-- ----------------------------------------------------
+local function _rcvFSUpdShown(rcvData)
+    local _statusNew = _checkStatusTimeout()
+    if _displayOn[1] == rcvData then
+        if _status[1] == 4 then
+            _statusNew = _setStatus(5)
+        elseif _status[1] == 6 then
+            _statusNew = _setStatus(2)
+        end
+    end
+    return _statusNew
+end
+
+-- -----------
+-- Update TKGS
+-- -----------
+local function _updTKGS()
+    _display['TKGS'] = string.format('TK %3i    GS %3i', _trueTrack, _groundSpeed)
+    return _rcvFSUpdShown('TKGS')
+end
+-- ----------------
+-- Event True Track
+-- ----------------
+local function _evtTrueTrack(deg)
+    local _statusNew = _status[1]
+    _trueTrack = deg
+    _statusNew = _updTKGS()
+    return _display['TKGS'], _statusNew
+end
+
+-- ------------------
+-- Event Ground Speed
+-- ------------------
+local function _evtGroundSpeed(knots)
+    local _statusNew = _status[1]
+    _groundSpeed = knots
+    _statusNew = _updTKGS()
+    return _display['TKGS'], _statusNew
+end
+
 -- ------------------
 -- Get current status
 -- ------------------
@@ -159,6 +204,8 @@ adirsDisplay = {
     sndADIRSInfo = _sndADIRSInfo,
     rcvACK       = _rcvACK,
     rcvNAK       = _rcvNAK,
+    evtTrueTrack = _evtTrueTrack,
+    evtGroundSpeed = _evtGroundSpeed,
     getStatus    = _getStatus
 }
 return adirsDisplay

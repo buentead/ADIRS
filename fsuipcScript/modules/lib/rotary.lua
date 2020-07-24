@@ -27,9 +27,9 @@ local function _setRotary(rotary,position,test)
                 _adirs.rcvRotaryPos(_rotaryPosition[1],_rotaryPosition[2])
             end
         end
-        _serial.sndACKNAK('$FSACK,')
+        _serial.sndACKNAK('$FSACK')
     else
-        _serial.sndACKNAK('$FSNAK,')
+        _serial.sndACKNAK('$FSNAK')
     end
 end
 
