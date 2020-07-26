@@ -44,9 +44,10 @@ unsigned long gTimeHeartbeat = 0;   // timout to resend heartbeat
 unsigned long gWaitForACK = 0;      // timer to wait for ACK/NAK
 String  gSerialInput   = "";        // used to read serial data
 String  gData[MAXDATA];             // ring buffer for commands received
-String  gLCDRow        = "";        // Dot matrix display row
+String  gLCDRowNew     = "";        // Dot matrix display row to be displayed
+char    gLCDRowSet[MAXADIRS + 1];   // Dot matrix display row currently active
 boolean gDataAvailable = false;     // true: new command(s) in ring buffer available
-boolean gLcdOn         = false;
+boolean gLcdOn         = true;
 boolean gBatOn[2]      = {false,false};
 boolean gStartCmd      = false;     // '$' received to indicate start of new command
 byte    gDataSerial    = 0;         // gData array index used by serial input
@@ -79,6 +80,7 @@ void setup() {
   adirs.print("Built by Adrian Buenter");
   delay(5000);
   adirs.clear();
+  gLCDRowSet[MAXADIRS + 1] = 0;
 }
 
 /*
@@ -90,7 +92,7 @@ void loop() {
   gState = fStateMachine(gState,gTimeResend,gTimeHeartbeat,gDataAvailable);
   // process data
   switch (gState) {
-    case 0:
+    case 0: // Ready to send Heartbeat with version
       gState = sendHeartbeat();
       break;
     case 2:
@@ -105,7 +107,7 @@ void loop() {
       break;
     case 4:
       idx = (gDataExe + 1) % MAXDATA;
-      if (gData[idx].substring(0,7) == "$FSROW,") {
+      if (gData[idx].substring(0,7) == "$FSLCD,") {
         fFSROW(gData[idx]);
       }
       else if (gData[idx].substring(0,7) == "$FSBA1,") {
@@ -340,19 +342,38 @@ boolean isTimeout(unsigned long oldTimeResend) {
    PROCESS COMMANDS
 */
 
-// $FSROW - set dot matrix text
+// $FSLCD - set dot matrix text
 void fFSROW(const String& pSerialInput) {
-  String row = "";
-  row = pSerialInput.substring(7);
-  gLCDRow = row.substring(0,MAXADIRS);
+  String row = pSerialInput.substring(7);
+  gLCDRowNew = row.substring(0,MAXADIRS);
   displayADIRS();
   Serial.println("$ADACK");
 }
 // write text to dot matrix display
 void displayADIRS(){
+  // Sending all 24 characters (e.g. adirs.print("string")) takes about 265ms - 270ms.
+  // To ensure fast update cycles, only characters that changed will be sent to the display.
+  byte strLen = gLCDRowNew.length();
   if (gLcdOn){
-    adirs.setCursor((24 - gLCDRow.length())/2);
-    adirs.print(gLCDRow);
+    // process buffer and send character if changed
+    for (int i = 0; i < MAXADIRS; i++){
+      if (i < strLen){
+        // compare old buffer with new buffer
+        if (gLCDRowSet[i] != gLCDRowNew[i]){
+          gLCDRowSet[i] = gLCDRowNew[i];
+          adirs.setCursor(i);
+          adirs.write(gLCDRowSet[i]);
+        }
+      }
+      else {
+        // new buffer shorter than max buffer -> fill with space
+        if (gLCDRowSet[i] != ' '){
+          gLCDRowSet[i] = ' ';
+          adirs.setCursor(i);
+          adirs.write(gLCDRowSet[i]);
+        }
+      }
+    }
   }
 }
 
@@ -406,6 +427,9 @@ void fFSOFF(const String& pSerialInput){
   if (pSerialInput.substring(7,10) == "LCD"){
     gLcdOn = false;
     adirs.clear();
+    for (int i = 0; i < MAXADIRS; i++){
+      gLCDRowSet[i] = ' ';
+    }
   }
   else if (pSerialInput.substring(7,10) == "BA1"){
     gBatOn[0] = false;
