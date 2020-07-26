@@ -243,16 +243,17 @@ local _funcSendBATData = {
     [11] = function (bat) b,_,s = _sndBATxVolt(bat) return b,s end
 }
 local function _sndBATData()
-    local _bat, _stat
+    local _bat, _stat, _rc
     --TODO: loop shouldn't always start with BA1 entry
     for bat, status in pairs(_status) do
         _checkStatusTimeout(bat)
         if _funcSendBATData[status[1]] then
             _bat, _stat = _funcSendBATData[status[1]](bat)
+            _rc = _bat
             break       -- send only one request in order to wait for its ACK/NAK
         end
     end
-    return _bat, _stat
+    return _rc, _stat
 end
 
 -- ----------------------------------

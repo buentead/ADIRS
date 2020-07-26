@@ -165,7 +165,7 @@ end
 -- Update TKGS
 -- -----------
 local function _updTKGS()
-    _display['TKGS'] = string.format('TK %3i    GS %3i', _trueTrack, _groundSpeed)
+    _display['TKGS'] = string.format('TK %03i` %3iKTS', _trueTrack, _groundSpeed)
     return _rcvFSUpdShown('TKGS')
 end
 -- ----------------
@@ -206,7 +206,7 @@ end
 -- Update Wind display
 -- -------------------
 local function _updWind()
-    _display['WIND'] = string.format('WIND %3i KN / %3i DEG', _windKn, _windDeg)
+    _display['WIND'] = string.format('WIND %3iKTS / %03i`', _windKn, _windDeg)
     return _rcvFSUpdShown('WIND')
 end
 
@@ -235,7 +235,7 @@ end
 -- ------------
 local function _evtHeading(deg)
     _trueHeading = deg
-    _display['HDG'] = string.format('HEADING %3i DEG', _trueHeading)
+    _display['HDG'] = string.format('HEADING %03i`', _trueHeading)
     return _display['HDG'], _rcvFSUpdShown('HDG')
 end
 

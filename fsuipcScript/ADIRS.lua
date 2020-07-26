@@ -31,8 +31,8 @@ function evtSendData()
     --TODO ensure that BAT, ADIRS, and TRIPPLE GAGE can send data with equal priority
     local _bat
     _bat = bat.sndBATData()      -- send pending data of batteries
-    if not _bat then                    -- _bat == nil if no data sent
-        -- send ADIRS data
+    if not _bat then             -- _bat == nil if no data sent
+        adirs.sndADIRSInfo()
     end
 end
 
@@ -143,6 +143,7 @@ data.setHandler(hCom)                    -- set serial port handler
 data.setFunctionDataTx(dataTX)           -- function to display sent data
 bat.setDataCom(data)                     -- set instance to send data
 rotary.setDataCom(data)                  -- set instance to send data
+adirs.setDataCom(data)                  -- set instance to send data
 handshake.setDataCom(data)               -- set instance to send data
 -- Set events
 display.show(hWnd, 1, "Set events")
