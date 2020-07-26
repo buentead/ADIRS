@@ -1,15 +1,28 @@
 @startuml
-scale 800*600
+scale 1000*600
 hide empty description
 [*] --> State1
 State1 : Rotary position unknown
 State1 --> State2 : rcvRotaryPos
 State2 : pending ADIRS update
 State2 --> State3 : rotarySYSoff
-State3 : ADIRS display off
+State3 : switch display 'OFF'
+State3 --> State7 : sndADIRSInfo
 State3 --> State2 : rcvRotaryPos
+State7 : ADIRS display OFF wait for 'ACK'
+State7 --> State3 : rcvNAK
+State7 --> State3 : timeout
+State7 --> State8 : rcvRotaryPos
+State8 : unexpected rotary change received
+State8 --> State2 : rcvNAK
+State8 --> State2 : rcvACK
+State8 --> State2 : timeout
+State8 --> State8 :rcvRotaryPos
+State7 --> State9 : rcvACK
+State9 : ADIRS display off
+State9 --> State2 : rcvRotaryPos
 State2 --> State4 : sndADIRSInfo
-State4 : wait for 'ACK'
+State4 : Send data wait for 'ACK'
 State4 --> State2 : rcvNAK
 State4 --> State2 : timeout
 State4 --> State5 : rcvRotaryPos
@@ -24,6 +37,5 @@ State4 --> State6 : rcvACK
 State6 : ADIRS display up to date
 State6 --> State2 : rcvRotaryPos
 State6 --> State2 : rcvFSUpdShown
-State6 --> State3 : rotarySYSoff
 }
 @enduml

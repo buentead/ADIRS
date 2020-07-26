@@ -41,7 +41,7 @@ local function _setStatus(status)
         _status[1] = status
     end
     _status[2] = os.clock() + _timeout
-    if _status[1] ~= 4 and _status[1] ~= 5 then
+    if _status[1] ~= 4 and _status[1] ~= 5 and _status[1] ~= 7 and _status[1] ~= 8 then
         -- new status ignors ACK or NAK messages.
         _fProcessACK = 0
         _fProcessNAK = 0
@@ -54,6 +54,8 @@ local function _checkStatusTimeout()
     if os.clock() > _status[2] then
         if     _status[1] == 4 then _status[1] = 2
         elseif _status[1] == 5 then _status[1] = 2
+        elseif _status[1] == 7 then _status[1] = 3
+        elseif _status[1] == 8 then _status[1] = 2
         end
     end
     return _status[1]
@@ -83,9 +85,31 @@ local function _rcvRotaryPos(data,sys)
     return _statusNew
 end
 
--- -----------------------------------
--- Receive send ADIRS Info Display ACK
--- -----------------------------------
+-- -------------------------------------
+-- Receive "send ADIRS OFF Display" ACK
+-- -------------------------------------
+local function _rcvADIRSOffACK()
+    if _status[1] == 8 then
+        _setStatus(2)
+    else
+        _setStatus(9)
+    end
+end
+
+-- -------------------------------------
+-- Receive "send ADIRS OFF Display" NAK
+-- -------------------------------------
+local function _rcvADIRSOffNAK()
+    if _status[1] == 8 then
+        _setStatus(2)
+    else
+        _setStatus(3)
+    end
+end
+
+-- -------------------------------------
+-- Receive "send ADIRS Info Display" ACK
+-- -------------------------------------
 local function _rcvADIRSInfoACK()
     if _status[1] == 5 then
         _setStatus(2)
@@ -94,9 +118,9 @@ local function _rcvADIRSInfoACK()
     end
 end
 
--- -----------------------------------
--- Receive send ADIRS Info Display NAK
--- -----------------------------------
+-- -------------------------------------
+-- Receive "send ADIRS Info Display" NAK
+-- -------------------------------------
 local function _rcvADIRSInfoNAK()
     _setStatus(2)
 end
@@ -110,7 +134,7 @@ local function _sndADIRSInfo()
     local _msg
     _checkStatusTimeout()
     if _status[1] == 2 then
-        if _statusIR[_displayOn[2]] == 1 then
+        if _statusIR[_displayOn[2]] == 1 then   -- verify if IRx is ON
             _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. _display[_displayOn[1]])
         else
             _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD, ')
@@ -119,6 +143,13 @@ local function _sndADIRSInfo()
             _fProcessACK = _rcvADIRSInfoACK
             _fProcessNAK = _rcvADIRSInfoNAK
             _setStatus(4)
+        end
+    elseif _status[1] == 3 then
+        _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD, ')
+        if _rc == 0 then
+            _fProcessACK = _rcvADIRSOffACK
+            _fProcessNAK = _rcvADIRSOffNAK
+            _setStatus(7)
         end
     end
     return _msg, _status[1]
@@ -165,8 +196,10 @@ end
 -- Update TKGS
 -- -----------
 local function _updTKGS()
+    local _rc
     _display['TKGS'] = string.format('TK %03i` %3iKTS', _trueTrack, _groundSpeed)
-    return _rcvFSUpdShown('TKGS')
+    _rc = _rcvFSUpdShown('TKGS')
+    return _rc
 end
 -- ----------------
 -- Event True Track
@@ -206,8 +239,10 @@ end
 -- Update Wind display
 -- -------------------
 local function _updWind()
+    local _rc
     _display['WIND'] = string.format('WIND %3iKTS / %03i`', _windKn, _windDeg)
-    return _rcvFSUpdShown('WIND')
+    _rc = _rcvFSUpdShown('WIND')
+    return _rc
 end
 
 -- ---------------------
