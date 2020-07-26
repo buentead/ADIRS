@@ -58,6 +58,43 @@ function evtGroundSpeed(pOffset, pValue)
     adirs.evtGroundSpeed(math.floor((pValue / 65536 * 1.943844) + 0.5))
 end
 
+-- Position Latitude (N/S)
+function evtPosLAT(pOffset, pValue)
+    local _latO = ''
+    -- Latitude in degrees
+    local _posLat = pValue * 90.0 / ( 10001750.0 * 65536.0 * 65536.0 )
+    local _latG = math.floor(_posLat)
+    local _latM = (_posLat - _latG) * 60
+    if _posLat > 0 then _latO = "N" else _latO = "S" end
+    adirs.evtPPos('LAT', _latO, _latG, _latM)
+end
+
+-- Position Longitude (E/W)
+function evtPosLON(pOffset, pValue)
+    local _lonO = ''
+    -- Longitude in Grad
+    local _posLon = pValue * 360.0 / ( 65536.0 * 65536.0 * 65536.0 * 65536.0 )
+    local _lonG = math.floor(_posLon)
+    local _lonM = (_posLon - _lonG) * 60
+    if _posLon > 0 then _lonO = "E" else _lonO = "W" end
+    adirs.evtPPos('LON', _lonO, _lonG, _lonM)
+end
+
+-- Wind in Knots
+function evtWindKn(pOffset, pValue)
+    adirs.evtWindKn(pValue)
+end
+
+-- Wind Direction
+function evtWindDeg(pOffset, pValue)
+    adirs.evtWindDeg(math.floor((pValue * 360 / 65536) + 0.5))
+end
+
+-- True Heading
+function evtHeading(pOffset, pValue)
+    adirs.evtHeading(math.floor((pValue * 360 / (65536 * 65536)) + 0.5))
+end
+
 -- Logging data sent to Arduino
 function dataTX(msgTX)
     local _msg = "TX: '" .. msgTX .. "' - " .. os.date()
@@ -78,8 +115,11 @@ function evtSimClose(pEvtType)
     event.cancel("evtBAT2")
     event.cancel("evtTrueTrack")
     event.cancel("evtGroundSpeed")
-    --    event.cancel("evtPosLAT")
-    --    event.cancel("evtPosLON")
+    event.cancel("evtPosLAT")
+    event.cancel("evtPosLON")
+    event.cancel("evtWindKn")
+    event.cancel("evtWindDeg")
+    event.cancel("evtHeading")
     --    event.cancel("evtMainPower")
     --    event.cancel("evtGeneral")
     event.cancel("evtSimClose")
@@ -113,4 +153,9 @@ event.offset(0x73BC, "SW",  "evtBAT1")          -- BAT1 0x73BC "SW" - voltage * 
 event.offset(0x73BE, "SW",  "evtBAT2")          -- BAT2 0x73BE "SW" - voltage * 10
 event.offset(0x6040, "DBL", "evtTrueTrack")     -- magnetic track in radians (deg = rad * 180/pi)
 event.offset(0x02B4, "SD",  "evtGroundSpeed")   -- ground speed as 65536*metres/sec
+event.offset(0x0560, "DD", "evtPosLAT")         -- Lattitude
+event.offset(0x0568, "DD", "evtPosLON")         -- Longitude
+event.offset(0x0E90, "UW", "evtWindKn")         -- Ambient wind speed (at aircraft) in knots
+event.offset(0x0E92, "UW", "evtWindDeg")        -- Ambient wind direction (at aircraft), *360/65536 to get degrees
+event.offset(0x0580, "UD", "evtHeading")        -- Heading, *360/(65536*65536) for degrees true
 display.show(hWnd, 1, "Initialize completed")

@@ -28,6 +28,10 @@ local _fProcessNAK = 0
 -- instance values
 local _trueTrack   = 0
 local _groundSpeed = 0
+local _ppos        = {LAT = {'N',0,0.0}, LON = {'E',0,0.0} }
+local _windKn      = 0
+local _windDeg     = 0
+local _trueHeading = 0
 
 -- Set new Status
 local function _setStatus(status)
@@ -168,7 +172,7 @@ end
 -- Event True Track
 -- ----------------
 local function _evtTrueTrack(deg)
-    local _statusNew = _status[1]
+    local _statusNew
     _trueTrack = deg
     _statusNew = _updTKGS()
     return _display['TKGS'], _statusNew
@@ -178,10 +182,61 @@ end
 -- Event Ground Speed
 -- ------------------
 local function _evtGroundSpeed(knots)
-    local _statusNew = _status[1]
+    local _statusNew
     _groundSpeed = knots
     _statusNew = _updTKGS()
     return _display['TKGS'], _statusNew
+end
+
+-- ----------------------
+-- event Present Position
+-- ----------------------
+local function _evtPPos(coord,coordO,coordG,coordM)
+    _ppos[coord][1] = coordO
+    _ppos[coord][2] = coordG
+    _ppos[coord][3] = coordM
+    _display['PPOS'] = string.format("%s%3i`%5.2f'  %s%03i`%5.2f'",
+        _ppos['LAT'][1], _ppos['LAT'][2], _ppos['LAT'][3],
+        _ppos['LON'][1], _ppos['LON'][2], _ppos['LON'][3]
+    )
+    return _display['PPOS'], _rcvFSUpdShown('PPOS')
+end
+
+-- -------------------
+-- Update Wind display
+-- -------------------
+local function _updWind()
+    _display['WIND'] = string.format('WIND %3i KN / %3i DEG', _windKn, _windDeg)
+    return _rcvFSUpdShown('WIND')
+end
+
+-- ---------------------
+-- Ambient Wind in Knots
+-- ---------------------
+local function _evtWindKn(knots)
+    local _statusNew
+    _windKn = knots
+    _statusNew = _updWind()
+    return _display['WIND'], _statusNew
+end
+
+-- ----------------------
+-- Ambient Wind Direction
+-- ----------------------
+local function _evtWindDeg(deg)
+    local _statusNew
+    _windDeg = deg
+    _statusNew = _updWind()
+    return _display['WIND'], _statusNew
+end
+
+-- ------------
+-- True Heading
+-- ------------
+local function _evtHeading(deg)
+    _trueHeading = deg
+    _display['HDG'] = string.format('HEADING %3i DEG', _trueHeading)
+    return _display['HDG'], _rcvFSUpdShown('HDG')
 end
 
 -- ------------------
@@ -206,6 +261,10 @@ adirsDisplay = {
     rcvNAK       = _rcvNAK,
     evtTrueTrack = _evtTrueTrack,
     evtGroundSpeed = _evtGroundSpeed,
+    evtPPos      = _evtPPos,
+    evtWindKn    = _evtWindKn,
+    evtWindDeg   = _evtWindDeg,
+    evtHeading   = _evtHeading,
     getStatus    = _getStatus
 }
 return adirsDisplay
