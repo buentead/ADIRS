@@ -6,8 +6,8 @@
 
 local sendReceiveData = {}
 -- local variables
-local _rotary    = require('modules/lib/rotary')
-local _handshake = require('modules/lib/handshake')
+local _rotary    = require('lib/rotary')
+local _handshake = require('lib/handshake')
 local _module               -- module waiting for ACK or NAK
 local _hCom        = 0      -- handler of serial interface
 local _fDataTX     = 0      -- function to display buffer in WideFS client

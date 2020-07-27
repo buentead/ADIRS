@@ -95,6 +95,21 @@ function evtHeading(pOffset, pValue)
     adirs.evtHeading(math.floor((pValue * 360 / (65536 * 65536)) + 0.5))
 end
 
+-- ACCU pressure
+function evtACCUPressure(pOffset, pValue)
+
+end
+
+-- Left Brake
+function evtLeftBrake(pOffset, pValue)
+
+end
+
+-- Right Brake
+function evtRightBrake(pOffset, pValue)
+
+end
+
 -- Logging data sent to Arduino
 function dataTX(msgTX)
     local _msg = "TX: '" .. msgTX .. "' - " .. os.date()
@@ -120,6 +135,9 @@ function evtSimClose(pEvtType)
     event.cancel("evtWindKn")
     event.cancel("evtWindDeg")
     event.cancel("evtHeading")
+    event.cancel("evtACCUPressure")
+    event.cancel("evtLeftBrake")
+    event.cancel("evtRightBrake")
     --    event.cancel("evtMainPower")
     --    event.cancel("evtGeneral")
     event.cancel("evtSimClose")
@@ -159,4 +177,7 @@ event.offset(0x0568, "DD", "evtPosLON")         -- Longitude
 event.offset(0x0E90, "UW", "evtWindKn")         -- Ambient wind speed (at aircraft) in knots
 event.offset(0x0E92, "UW", "evtWindDeg")        -- Ambient wind direction (at aircraft), *360/65536 to get degrees
 event.offset(0x0580, "UD", "evtHeading")        -- Heading, *360/(65536*65536) for degrees true
+event.offset(0x73A7, "UB", "evtACCUPressure")   -- Triple Brake Indicator ACCU Pressure (0-255)
+event.offset(0x73A8, "UB", "evtLeftBrake")      -- Triple Brake Indicator Left Brake (0-255)
+event.offset(0x73A9, "UB", "evtRightBrake")     -- Triple Brake Indicator Right Brake (0-255)
 display.show(hWnd, 1, "Initialize completed")

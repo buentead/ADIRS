@@ -4,11 +4,11 @@
 -- Testing all functions of the modules called by the main FSUIPC scripts ADIRS.lua
 
 lunit     = require('luaunit')
-bat       = require('modules/lib/battery')
-rotary    = require('modules/lib/rotary')
-adirs     = require('modules/lib/adirsDisplay')
-handshake = require('modules/lib/handshake')
-data      = require('modules/lib/sendReceiveData')
+bat       = require('lib/battery')
+rotary    = require('lib/rotary')
+adirs     = require('lib/adirsDisplay')
+handshake = require('lib/handshake')
+data      = require('lib/sendReceiveData')
 
 bat.setDataCom(data)                     -- set instance to send data
 rotary.setDataCom(data)                  -- set instance to send data

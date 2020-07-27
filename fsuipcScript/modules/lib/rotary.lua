@@ -7,7 +7,7 @@
 local rotary = {}
 -- local variables
 local _serial
-local _adirs = require('modules/lib/adirsDisplay')
+local _adirs = require('lib/adirsDisplay')
 local _rotaryPosition = {-1,-1}             -- two rotary switches: 1-DATA, 2-SYS
 local _fmgsOffset     = {119,125}           -- Jeehell FMGS offset
 local _rotaryMaxPos   = {5,3}               -- Data: 0-5, SYS: 0-3

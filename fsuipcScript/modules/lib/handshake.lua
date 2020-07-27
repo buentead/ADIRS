@@ -7,7 +7,7 @@
 local handshake = {}
 -- local variables
 local _serial
-local _bat    = require('modules/lib/battery')
+local _bat    = require('lib/battery')
 local _status = 1
 
 -- ---------------------------------
