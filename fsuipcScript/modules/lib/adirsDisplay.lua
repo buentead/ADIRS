@@ -182,7 +182,7 @@ end
 -- ----------------------------------------------------
 local function _rcvFSUpdShown(rcvData)
     local _statusNew = _checkStatusTimeout()
-    if _displayOn[1] == rcvData then
+    if _displayOn[2] ~= 'OFF' and _displayOn[1] == rcvData then
         if _status[1] == 4 then
             _statusNew = _setStatus(5)
         elseif _status[1] == 6 then
