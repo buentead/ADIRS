@@ -7,12 +7,14 @@ lunit     = require('luaunit')
 bat       = require('lib/battery')
 rotary    = require('lib/rotary')
 adirs     = require('lib/adirsDisplay')
+tg        = require('lib/tripleGauge')
 handshake = require('lib/handshake')
 data      = require('lib/sendReceiveData')
 
 bat.setDataCom(data)                     -- set instance to send data
 rotary.setDataCom(data)                  -- set instance to send data
 adirs.setDataCom(data)                   -- set instance to send data
+tg.setDataCom(data)                      -- set instance to send data
 handshake.setDataCom(data)               -- set instance to send data
 
 Test010Handshake = {}
@@ -431,5 +433,59 @@ Test040Adirs = {}
         lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS display updated
     end
 -- end of table 'Test040Adirs'
+
+Test050Servo = {}
+    -- Servo updates
+    function Test050Servo:test010()
+        lunit.assertEquals(tg.rcvTGValue('ACCU',1),'1,0,0')
+        lunit.assertEquals(tg.getStatus(),1)
+        lunit.assertEquals(tg.sndTGValues(),'$FSTGV,1,0,0\r\n')
+        lunit.assertEquals(tg.getStatus(),2)
+        data.rcvData('ADACK')
+        lunit.assertEquals(tg.getStatus(),4)
+    end
+    function Test050Servo:test020()
+        lunit.assertEquals(tg.rcvTGValue('LEFT',2),'1,2,0')
+        lunit.assertEquals(tg.getStatus(),1)
+        lunit.assertEquals(tg.sndTGValues(),'$FSTGV,1,2,0\r\n')
+        lunit.assertEquals(tg.getStatus(),2)
+        lunit.assertEquals(tg.rcvTGValue('RIGHT',3),'1,2,3')
+        lunit.assertEquals(tg.getStatus(),3)
+        lunit.assertEquals(tg.sndTGValues(),nil)
+        data.rcvData('ADACK')
+        lunit.assertEquals(tg.getStatus(),1)
+        lunit.assertEquals(tg.sndTGValues(),'$FSTGV,1,2,3\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(tg.getStatus(),4)
+        lunit.assertEquals(tg.sndTGValues(),nil)
+    end
+    function Test050Servo:test030()
+        lunit.assertEquals(tg.rcvTGValue('ACCU',200),'200,2,3')
+        lunit.assertEquals(tg.rcvTGValue('LEFT',255),'200,255,3')
+        lunit.assertEquals(tg.rcvTGValue('RIGHT',254),'200,255,254')
+        lunit.assertEquals(tg.getStatus(),1)
+        lunit.assertEquals(tg.sndTGValues(),'$FSTGV,200,255,254\r\n')
+        lunit.assertEquals(tg.getStatus(),2)
+        lunit.assertEquals(tg.sndTGValues(),nil)
+        data.rcvData('ADACK')
+        lunit.assertEquals(tg.getStatus(),4)
+        lunit.assertEquals(tg.rcvTGValue('LEFT',0),'200,0,254')
+        lunit.assertEquals(tg.rcvTGValue('RIGHT',0),'200,0,0')
+        lunit.assertEquals(tg.getStatus(),1)
+        lunit.assertEquals(tg.sndTGValues(),'$FSTGV,200,0,0\r\n')
+        lunit.assertEquals(tg.getStatus(),2)
+        lunit.assertEquals(tg.sndTGValues(),nil)
+        lunit.assertEquals(tg.getStatus(),2)
+        data.rcvData('ADNAK')
+        lunit.assertEquals(tg.getStatus(),1)
+        data.rcvData('ADACK')
+        lunit.assertEquals(tg.getStatus(),1)
+        lunit.assertEquals(tg.sndTGValues(),'$FSTGV,200,0,0\r\n')
+        lunit.assertEquals(tg.getStatus(),2)
+        data.rcvData('ADACK')
+        lunit.assertEquals(tg.getStatus(),4)
+        lunit.assertEquals(tg.sndTGValues(),nil)
+    end
+-- end of table 'Test030Rotary'
 
 os.exit( lunit.LuaUnit.run() )

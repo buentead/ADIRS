@@ -52,10 +52,10 @@ end
 -- Check if status has timed out
 local function _checkStatusTimeout()
     if os.clock() > _status[2] then
-        if     _status[1] == 4 then _status[1] = 2
-        elseif _status[1] == 5 then _status[1] = 2
-        elseif _status[1] == 7 then _status[1] = 3
-        elseif _status[1] == 8 then _status[1] = 2
+        if     _status[1] == 4 then _setStatus(2)
+        elseif _status[1] == 5 then _setStatus(2)
+        elseif _status[1] == 7 then _setStatus(3)
+        elseif _status[1] == 8 then _setStatus(2)
         end
     end
     return _status[1]

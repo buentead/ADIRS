@@ -1,0 +1,21 @@
+@startuml
+scale 800*600
+hide empty description
+[*] --> State1
+State1 : pending servo update(s)
+State1 --> State1 : rcvTGValues
+State1 --> State2 : sndTGValues
+State2 : wait for 'ACK'
+State2 --> State1 : rcvNAK
+State2 --> State1 : timeout
+State2 --> State3 : rcvTGValues
+State3 : unexpected TG values update
+State3 --> State1 : rcvNAK
+State3 --> State1 : rcvACK
+State3 --> State1 : timeout
+State3 --> State3 : rcvTGValues
+State2 --> State4 : rcvACK
+State4 : TG servos up-to-date
+State4 --> State1 : rcvTGValues
+}
+@enduml

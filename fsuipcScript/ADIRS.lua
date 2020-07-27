@@ -8,6 +8,7 @@
 bat       = require('lib/battery')
 rotary    = require('lib/rotary')
 adirs     = require('lib/adirsDisplay')
+tg        = require('lib/tripleGauge')
 handshake = require('lib/handshake')
 data      = require('lib/sendReceiveData')
 
@@ -29,10 +30,16 @@ end
 -- Send pending data
 function evtSendData()
     --TODO ensure that BAT, ADIRS, and TRIPPLE GAGE can send data with equal priority
-    local _bat
-    _bat = bat.sndBATData()      -- send pending data of batteries
-    if not _bat then             -- _bat == nil if no data sent
-        adirs.sndADIRSInfo()
+    --Note: Once a EXT PWR, APU, or GEN is on, BAT value doesn't change anymore, if it shows 28.0V
+    --      ACCU and BRAKE servo values only change, if parking brake state changes
+    --      ADIRS update should receive sufficient time for update due to the above facts
+    local _rc
+    _rc = bat.sndBATData()          -- send pending data of batteries
+    if not _rc then                 -- _rc == nil if no data sent
+        _rc = tg.sndTGValues()      -- send pending servo states
+    end
+    if not _rc then                 -- _rc == nil if no data sent
+        _rc = adirs.sndADIRSInfo()  -- Send pendign ADIRS info
     end
 end
 
@@ -97,17 +104,17 @@ end
 
 -- ACCU pressure
 function evtACCUPressure(pOffset, pValue)
-
+    tg.rcvTGValue('ACCU', pValue)
 end
 
 -- Left Brake
 function evtLeftBrake(pOffset, pValue)
-
+    tg.rcvTGValue('LEFT', pValue)
 end
 
 -- Right Brake
 function evtRightBrake(pOffset, pValue)
-
+    tg.rcvTGValue('RIGHT', pValue)
 end
 
 -- Logging data sent to Arduino
@@ -161,7 +168,8 @@ data.setHandler(hCom)                    -- set serial port handler
 data.setFunctionDataTx(dataTX)           -- function to display sent data
 bat.setDataCom(data)                     -- set instance to send data
 rotary.setDataCom(data)                  -- set instance to send data
-adirs.setDataCom(data)                  -- set instance to send data
+adirs.setDataCom(data)                   -- set instance to send data
+tg.setDataCom(data)                      -- set instance to send data
 handshake.setDataCom(data)               -- set instance to send data
 -- Set events
 display.show(hWnd, 1, "Set events")
