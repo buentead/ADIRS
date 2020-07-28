@@ -8,6 +8,7 @@
 #include <Wire.h>
 #include <LedDisplay.h>
 #include <max7219.h>
+#include <Servo.h>
 
 // define rotary switches
 #define DATA_POS 6
@@ -27,16 +28,27 @@ const int     MAXADIRS   = 24;
 const int     MAXINBUF   = 100;
 const int     MAXDATA    = 5;
 const int     MAXANALOG  = 1024;
-const int     TIMEOUTACK = 2000;           // time in milliseconds to wait for ACK/NAK 
+const int     TIMEOUTACK = 2000;           // time in milliseconds to wait for ACK/NAK
 const long    BAUDRATE   = 115200;
 const long    TIMERESENDMAX = 1000000;    // timeout before version number is sent again (in milliseconds)
 const uint8_t MAXBRIGHT = 6;
+const byte    ACCUMIN = 0; // 10
+const byte    ACCUMAX = 98; // 105
+const byte    BRKLMIN = 3; // 15
+const byte    BRKLMAX = 96; // 102
+const byte    BRKRMIN = 103; // 111
+const byte    BRKRMAX = 8; // 24
 
 // Dot matrix display configuration
 LedDisplay adirs = LedDisplay(2, 3, 4, 5, 6, MAXADIRS);
 
 // Define 8-digit display configuration for battery voltage
 MAX7219 bat;
+
+// Servo's of Triple Gauge
+Servo servoAccu;
+Servo servoBrkL;
+Servo servoBrkR;
 
 // Global variables
 unsigned long gTimeResend = 0;      // time when version is being sent (again)
@@ -78,7 +90,13 @@ void setup() {
   adirs.clear();
   adirs.setCursor(0);
   adirs.print("Built by Adrian Buenter");
-  delay(5000);
+  servoAccu.attach(7);
+  servoAccu.write(ACCUMIN);
+  servoBrkL.attach(8);
+  servoBrkL.write(BRKLMIN);
+  servoBrkR.attach(9);
+  servoBrkR.write(BRKRMIN);
+  delay(4000);
   adirs.clear();
   gLCDRowSet[MAXADIRS + 1] = 0;
 }
@@ -121,6 +139,9 @@ void loop() {
       }
       else if (gData[idx].substring(0,7) == "$FSOFF,") {
         fFSOFF(gData[idx]);
+      }
+      else if (gData[idx].substring(0,7) == "$FSTGV,") {
+        fFSTGV(gData[idx]);
       }
       else {
         Serial.println("$ADNAK");
@@ -439,5 +460,24 @@ void fFSOFF(const String& pSerialInput){
     gBatOn[1] = false;
     displayVolt();
   }
+  Serial.println("$ADACK");
+}
+
+// Set Triple Gauge Servo's
+void fFSTGV(const String& pSerialInput) {
+  byte i1 = 0;
+  byte i2 = 0;
+  int  tgv = 0;
+
+  i1 = pSerialInput.indexOf(',', 7);
+  tgv = (pSerialInput.substring(7, i1)).toInt();
+  servoAccu.write(map(tgv,0,255,ACCUMIN,ACCUMAX));
+  i1++;
+  i2 = pSerialInput.indexOf(',', i1);
+  tgv = (pSerialInput.substring(i1, i2)).toInt();
+  servoBrkL.write(map(tgv,0,255,BRKLMIN,BRKLMAX));
+  i2++;
+  tgv = (pSerialInput.substring(i2)).toInt();
+  servoBrkR.write(map(tgv,0,255,BRKRMIN,BRKRMAX));
   Serial.println("$ADACK");
 }
