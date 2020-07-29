@@ -1,0 +1,30 @@
+@startuml
+scale 800*600
+hide empty description
+skinparam componentStyle uml2
+
+package "FSUIPC" {
+    [FSUIPC offset change]
+    package "LUA Script"{
+        [ADIRS]
+        [adirsDisplay]<<modules>>
+        [battery]<<modules>>
+        [handshake]<<modules>>
+        [rotary]<<modules>>
+        [sendReceiveData]<<modules>>
+        [tripleGauge]<<modules>>
+    }
+    [FSUIPC offset change] --> [ADIRS]
+}
+
+package "Arduino" {
+    [serialEvent]
+    [setup]
+    [loop]
+}
+
+[sendReceiveData] <-> USB
+[loop] --> USB
+USB --> [serialEvent]
+
+@enduml
