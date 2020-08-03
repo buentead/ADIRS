@@ -390,6 +390,7 @@ Test040Adirs = {}
         lunit.assertEquals(adirs.getStatus(),4)                        -- Status 4 - wait for 'ACK'
         data.rcvData('ADACK')
         lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS display updated
+        lunit.assertEquals(adirs.evtHeading(1),"HEADING 001`")
         lunit.assertEquals(adirs.evtHeading(0),"HEADING 000`")
         lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
         lunit.assertEquals(adirs.sndADIRSInfo(),"$FSLCD,HEADING 000`\r\n")

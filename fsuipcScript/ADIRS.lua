@@ -13,7 +13,8 @@ handshake = require('lib/handshake')
 data      = require('lib/sendReceiveData')
 
 -- global variables
-hCom  = 0              -- serial communication handle
+hCom    = 0             -- serial communication handle
+gMagVar = 0             -- magnetic variation
 
 -- Data received
 function evtComData(hnd, strData, strLen)
@@ -21,7 +22,7 @@ function evtComData(hnd, strData, strLen)
     local _msg, _init = '', false
     i,_ = strData:find("%$")
     -- verify if valid data received
-    if i > 0 then
+    if i ~= nil and i > 0 then
         dataRX(strData:sub(i, -3))
         _msg = data.rcvData(strData:sub(i+1, -3))
     end
@@ -55,7 +56,7 @@ function evtBAT2(pOffset, pValue)
     bat.evtBATxVolt('BA2', pValue)
 end
 
--- True Track (in degree)
+-- Magnetic Track (in degree)
 function evtTrueTrack(pOffset, pValue)
     adirs.evtTrueTrack(math.floor(math.deg(pValue) + 0.5))
 end
@@ -99,7 +100,15 @@ end
 
 -- True Heading
 function evtHeading(pOffset, pValue)
-    adirs.evtHeading(math.floor((pValue * 360 / (65536 * 65536)) + 0.5))
+    local _magHeading = math.floor((pValue * 360 / (65536 * 65536)) - gMagVar + 0.5)
+    if _magHeading < 0 then _magHeading = _magHeading + 360 end
+    adirs.evtHeading(_magHeading)
+end
+
+-- Magnetic Variation
+function evtMagVariation(pOffset, pValue)
+    gMagVar = pValue * 360 / 65536
+    display.show(hWnd, 2, "Magnetic Variation: " .. gMagVar)
 end
 
 -- ACCU pressure
@@ -120,19 +129,20 @@ end
 -- Logging data sent to Arduino
 function dataTX(msgTX)
     local _msg = "TX: '" .. msgTX .. "' - " .. os.date()
-    display.show(hWnd, 8, _msg)
-    print(_msg)
+    display.show(hWnd, 3, _msg)
+    --DEBUG print(_msg)
 end
 
 -- Logging data received from Arduino
 function dataRX(msgRX)
     local _msg = "RX: '" .. msgRX .. "' - " .. os.date()
-    display.show(hWnd, 9, _msg)
-    print(_msg)
+    display.show(hWnd, 4, _msg)
+    --DEBUG print(_msg)
 end
 
 -- Terminate this script
 function evtSimClose(pEvtType)
+    event.cancel("evtMagVariation")
     event.cancel("evtBAT1")
     event.cancel("evtBAT2")
     event.cancel("evtTrueTrack")
@@ -156,13 +166,12 @@ end
 -- Main Routine
 -- ------------
 -- Create the display window for 9 values, position x=700, y=300
-hWnd = display.create("SYS Display and Battery", 9, 700, 300)
-display.show(hWnd, 1, "Set serial port")
+hWnd = display.create("SYS Display and Battery", 4, 700, 300)
+display.show(hWnd, 1, "Initialize ...")
 -- Set up serial communication
 repeat
     hCom = com.open("COM7", 115200, 0)
 until hCom > 0
-display.show(hWnd, 1, "Set data handler")
 -- Initialize modules
 data.setHandler(hCom)                    -- set serial port handler
 data.setFunctionDataTx(dataTX)           -- function to display sent data
@@ -172,10 +181,10 @@ adirs.setDataCom(data)                   -- set instance to send data
 tg.setDataCom(data)                      -- set instance to send data
 handshake.setDataCom(data)               -- set instance to send data
 -- Set events
-display.show(hWnd, 1, "Set events")
 event.sim(CLOSE, "evtSimClose")                 -- Flight Simulate closed
 event.com(hCom, 20, -1, 10, "evtComData")       -- wait for the 'LF' sign
 event.timer(140, "evtSendData")                 -- send data if required (max time ADIRS display 270ms)
+event.offset(0x02A0, "SW", "evtMagVariation")   -- Magnetic variation (signed, –ve = West). For degrees *360/65536.
 event.offset(0x73BC, "SW",  "evtBAT1")          -- BAT1 0x73BC "SW" - voltage * 10
 event.offset(0x73BE, "SW",  "evtBAT2")          -- BAT2 0x73BE "SW" - voltage * 10
 event.offset(0x6040, "DBL", "evtTrueTrack")     -- magnetic track in radians (deg = rad * 180/pi)
