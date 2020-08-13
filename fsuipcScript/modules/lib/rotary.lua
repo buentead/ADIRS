@@ -23,8 +23,10 @@ local function _setRotary(rotary,position,test)
             -- Set new rotary position in FMGS software
             if not test then ipc.writeUB( 0x78EE, _fmgsOffset[rotary] + (position - 1) ) end
             _rotaryPosition[rotary] = position
-            if rotary < 3 and _rotaryPosition[1] > 0 and _rotaryPosition[2] > 0 then
-                _adirs.rcvRotaryPos(_rotaryPosition[1],_rotaryPosition[2])
+            if rotary <= 2 and _rotaryPosition[1] > 0 and _rotaryPosition[2] > 0 then
+                _adirs.rcvRotaryPosDisplay(_rotaryPosition[1],_rotaryPosition[2])
+            elseif rotary > 2 then
+                _adirs.rcvRotaryPosIR(rotary - 2, position)
             end
         end
         _serial.sndACKNAK('$FSACK')

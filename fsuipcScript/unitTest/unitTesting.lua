@@ -155,15 +155,18 @@ Test030Rotary = {}
         lunit.assertEquals(rotary.getRotary(6),nil)                    -- internal 1 and 2 allowed
         lunit.assertEquals(data.rcvData('ADROT,1,1',true),'ADROT,1,1') -- internal SYS-IR1
         lunit.assertEquals(data.rcvData('ADROT,0,2',true),'ADROT,0,2') -- internal DATA-PPOS
-        lunit.assertEquals(data.rcvData('ADROT,2,2',true),'ADROT,2,2') -- internal IR1
+        lunit.assertEquals(data.rcvData('ADROT,2,1',true),'ADROT,2,1') -- internal IR1
         lunit.assertEquals(data.rcvData('ADROT,3,1',true),'ADROT,3,1') -- internal IR3
-        lunit.assertEquals(data.rcvData('ADROT,4,0',true),'ADROT,4,0') -- internal IR2
+        lunit.assertEquals(data.rcvData('ADROT,4,1',true),'ADROT,4,1') -- internal IR2
         lunit.assertEquals(rotary.getRotary(1),3)
         lunit.assertEquals(rotary.getRotary(2),2)
-        lunit.assertEquals(rotary.getRotary(3),3)
+        lunit.assertEquals(rotary.getRotary(3),2)
         lunit.assertEquals(rotary.getRotary(4),2)
-        lunit.assertEquals(rotary.getRotary(5),1)
-        lunit.assertEquals(adirs.rcvRotaryPos(rotary.getRotary(1),rotary.getRotary(2)),2)  -- check status 'pending ADIRS update'
+        lunit.assertEquals(rotary.getRotary(5),2)
+        lunit.assertEquals(adirs.rcvIRAligned('IR1', true),2)           -- IR1 aligned
+        lunit.assertEquals(adirs.rcvIRAligned('IR2', true),2)           -- IR2 aligned
+        lunit.assertEquals(adirs.rcvIRAligned('IR3', true),2)           -- IR3 aligned
+        lunit.assertEquals(adirs.rcvRotaryPosDisplay(rotary.getRotary(1),rotary.getRotary(2)),2)  -- check status 'pending ADIRS update'
     end
 -- end of table 'Test030Rotary'
 
@@ -261,12 +264,12 @@ Test040Adirs = {}
         lunit.assertEquals(data.rcvData('ADROT,0,5',true),'ADROT,0,5') -- internal DATA-STS
         lunit.assertEquals(data.rcvData('ADROT,1,1',true),'ADROT,1,1') -- internal SYS-IR1
         lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
-        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,No Messages\r\n')
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,STS - NONE\r\n')
         lunit.assertEquals(adirs.getStatus(),4)                        -- Status 4 - wait for 'ACK'
         lunit.assertEquals(adirs.sndADIRSInfo(),nil)
         data.rcvData('ADNAK')
         lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
-        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,No Messages\r\n')
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,STS - NONE\r\n')
         lunit.assertEquals(adirs.getStatus(),4)                        -- Status 4 - wait for 'ACK'
         lunit.assertEquals(adirs.sndADIRSInfo(),nil)
         data.rcvData('ADACK')
@@ -493,6 +496,60 @@ Test050Servo = {}
         lunit.assertEquals(tg.getStatus(),4)
         lunit.assertEquals(tg.sndTGValues(),nil)
     end
--- end of table 'Test030Rotary'
+-- end of table 'Test050Servo'
 
+Test060IRU = {}
+    function Test060IRU:test010()   -- Set SYS to IR1, Switch IR1 OFF
+        lunit.assertEquals(data.rcvData('ADROT,0,4',true),'ADROT,0,4') -- internal DATA-HDG
+        lunit.assertEquals(data.rcvData('ADROT,1,1',true),'ADROT,1,1') -- internal SYS-IR1
+        lunit.assertEquals(data.rcvData('ADROT,2,0',true),'ADROT,2,0') -- internal IR1 to NAV
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        adirs.__setStatusIRU('IR1',1)
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD, \r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS up to date
+    end
+    function Test060IRU:test020()   -- New Heading but IR1 remains OFF
+        lunit.assertEquals(adirs.evtHeading(91),"HEADING 091`")
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD, \r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS up to date
+    end
+    function Test060IRU:test030()   -- Switch IR1 to NAV (aligning)
+        lunit.assertEquals(data.rcvData('ADROT,2,1',true),'ADROT,2,1') -- internal IR1 to NAV
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,HEADING --.-`     TTN 7\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS up to date
+    end
+    function Test060IRU:test040()   -- Switch IR1 OFF / NAV for fast alignment
+        lunit.assertEquals(data.rcvData('ADROT,2,0',true),'ADROT,2,0') -- internal IR1 to NAV
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,REALN DESN 5 SEC\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS up to date
+        lunit.assertEquals(data.rcvData('ADROT,2,1',true),'ADROT,2,1') -- internal IR1 to NAV
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,HEADING --.-`     TTN 1\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS up to date
+    end
+    function Test060IRU:test050()   -- IR1 is aligned
+        lunit.assertEquals(adirs.rcvIRAligned('IR1', true),2)
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,HEADING 091`\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS up to date
+    end
+    function Test060IRU:test060()   -- Switch IR1 to ATT, DATA to PPOS
+        lunit.assertEquals(data.rcvData('ADROT,2,2',true),'ADROT,2,2') -- internal IR1 to ATT
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        lunit.assertEquals(data.rcvData('ADROT,0,2',true),'ADROT,0,2') -- internal DATA to PPOS
+        lunit.assertEquals(adirs.getStatus(),2)                        -- Status 2 - pending ADIRS update
+        lunit.assertEquals(adirs.sndADIRSInfo(),'$FSLCD,------------------------\r\n')
+        data.rcvData('ADACK')
+        lunit.assertEquals(adirs.getStatus(),6)                        -- Status 6 - ADIRS up to date
+    end
+
+-- end of table 'Test060IRU'
 os.exit( lunit.LuaUnit.run() )

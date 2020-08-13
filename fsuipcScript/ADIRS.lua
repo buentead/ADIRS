@@ -110,6 +110,16 @@ function evtMagVariation(pOffset, pValue)
     display.show(hWnd, 2, "Magnetic Variation: " .. gMagVar)
 end
 
+-- IRU alignment LED
+function evtIRAlign(pOffset, pValue)
+    if pOffset == 0x73A1 then
+        adirs.rcvIRAligned('IR1', (logic.And(pValue,0x20) == 0))
+        adirs.rcvIRAligned('IR2', (logic.And(pValue,0x80) == 0))
+    elseif pOffset == 0x73A2 then
+        adirs.rcvIRAligned('IR3', (logic.And(pValue,0x02) == 0))
+    end
+end
+
 -- ACCU pressure
 function evtACCUPressure(pOffset, pValue)
     tg.rcvTGValue('ACCU', pValue)
@@ -184,15 +194,17 @@ event.sim(CLOSE, "evtSimClose")                 -- Flight Simulate closed
 event.com(hCom, 20, -1, 10, "evtComData")       -- wait for the 'LF' sign
 event.timer(140, "evtSendData")                 -- send data if required (max time ADIRS display 270ms)
 event.offset(0x02A0, "SW", "evtMagVariation")   -- Magnetic variation (signed, –ve = West). For degrees *360/65536.
-event.offset(0x73BC, "SW",  "evtBAT1")          -- BAT1 0x73BC "SW" - voltage * 10
-event.offset(0x73BE, "SW",  "evtBAT2")          -- BAT2 0x73BE "SW" - voltage * 10
-event.offset(0x6040, "DBL", "evtTrueTrack")     -- magnetic track in radians (deg = rad * 180/pi)
-event.offset(0x02B4, "SD",  "evtGroundSpeed")   -- ground speed as 65536*metres/sec
+event.offset(0x73BC, "SW", "evtBAT1")           -- BAT1 0x73BC "SW" - voltage * 10
+event.offset(0x73BE, "SW", "evtBAT2")           -- BAT2 0x73BE "SW" - voltage * 10
+event.offset(0x6040, "DBL","evtTrueTrack")      -- magnetic track in radians (deg = rad * 180/pi)
+event.offset(0x02B4, "SD", "evtGroundSpeed")    -- ground speed as 65536*metres/sec
 event.offset(0x0560, "DD", "evtPosLAT")         -- Lattitude
 event.offset(0x0568, "DD", "evtPosLON")         -- Longitude
 event.offset(0x0E90, "UW", "evtWindKn")         -- Ambient wind speed (at aircraft) in knots
 event.offset(0x0E92, "UW", "evtWindDeg")        -- Ambient wind direction (at aircraft), *360/65536 to get degrees
 event.offset(0x0580, "UD", "evtHeading")        -- Heading, *360/(65536*65536) for degrees true
+event.offset(0x73A1, "UB", "evtIRAlign")        -- Status of IR alignment LED (part 1/2)
+event.offset(0x73A2, "UB", "evtIRAlign")        -- Status of IR alignment LED (part 2/2)
 event.offset(0x73A7, "UB", "evtACCUPressure")   -- Triple Brake Indicator ACCU Pressure (0-255)
 event.offset(0x73A8, "UB", "evtLeftBrake")      -- Triple Brake Indicator Left Brake (0-255)
 event.offset(0x73A9, "UB", "evtRightBrake")     -- Triple Brake Indicator Right Brake (0-255)

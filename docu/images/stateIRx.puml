@@ -6,6 +6,7 @@ State1 : IRx OFF
 State1 --> State2 : rcvRotaryNAV
 State2 : IRx NAV aligning
 State2 --> State3 : rcvIRAligned
+State2 --> State4 : rcvRotaryATT
 State3 : IRx NAV
 State3 --> State4 : rcvRotaryATT
 State4 : IRx ATT

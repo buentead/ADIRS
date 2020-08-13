@@ -244,7 +244,6 @@ local _funcSendBATData = {
 }
 local function _sndBATData()
     local _bat, _stat, _rc
-    --TODO: loop shouldn't always start with BA1 entry
     for bat, status in pairs(_status) do
         _checkStatusTimeout(bat)
         if _funcSendBATData[status[1]] then
