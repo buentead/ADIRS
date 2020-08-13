@@ -30,7 +30,6 @@ end
 
 -- Send pending data
 function evtSendData()
-    --TODO ensure that BAT, ADIRS, and TRIPPLE GAGE can send data with equal priority
     --Note: Once a EXT PWR, APU, or GEN is on, BAT value doesn't change anymore, if it shows 28.0V
     --      ACCU and BRAKE servo values only change, if parking brake state changes
     --      ADIRS update should receive sufficient time for update due to the above facts
@@ -170,7 +169,7 @@ hWnd = display.create("SYS Display and Battery", 4, 700, 300)
 display.show(hWnd, 1, "Initialize ...")
 -- Set up serial communication
 repeat
-    hCom = com.open("COM7", 115200, 0)
+    hCom = com.open("COM4", 115200, 0)
 until hCom > 0
 -- Initialize modules
 data.setHandler(hCom)                    -- set serial port handler

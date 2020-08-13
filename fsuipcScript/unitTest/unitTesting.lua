@@ -151,12 +151,18 @@ Test020Battery = {}
 Test030Rotary = {}
     -- Rotary switch changed
     function Test030Rotary:test010()
-        lunit.assertEquals(data.rcvData('ADROT,2,1'),'ADROT,2,1')      -- from external 0 and 1 allowed
-        lunit.assertEquals(rotary.getRotary(3),nil)                    -- internal 1 and 2 allowed
+        lunit.assertEquals(data.rcvData('ADROT,5,1'),'ADROT,5,1')      -- from external 0 to 4 allowed
+        lunit.assertEquals(rotary.getRotary(6),nil)                    -- internal 1 and 2 allowed
         lunit.assertEquals(data.rcvData('ADROT,1,1',true),'ADROT,1,1') -- internal SYS-IR1
         lunit.assertEquals(data.rcvData('ADROT,0,2',true),'ADROT,0,2') -- internal DATA-PPOS
+        lunit.assertEquals(data.rcvData('ADROT,2,2',true),'ADROT,2,2') -- internal IR1
+        lunit.assertEquals(data.rcvData('ADROT,3,1',true),'ADROT,3,1') -- internal IR3
+        lunit.assertEquals(data.rcvData('ADROT,4,0',true),'ADROT,4,0') -- internal IR2
         lunit.assertEquals(rotary.getRotary(1),3)
         lunit.assertEquals(rotary.getRotary(2),2)
+        lunit.assertEquals(rotary.getRotary(3),3)
+        lunit.assertEquals(rotary.getRotary(4),2)
+        lunit.assertEquals(rotary.getRotary(5),1)
         lunit.assertEquals(adirs.rcvRotaryPos(rotary.getRotary(1),rotary.getRotary(2)),2)  -- check status 'pending ADIRS update'
     end
 -- end of table 'Test030Rotary'
