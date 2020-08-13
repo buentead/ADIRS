@@ -13,6 +13,9 @@
 // define rotary switches
 #define DATA_POS 6
 #define SYS_POS 4
+#define IR1_POS 3
+#define IR2_POS 3
+#define IR3_POS 3
 #define ROTARY_NEWVAL 0
 #define ROTARY_OLDVAL 1
 #define ROTARY_DEBOUNCE 2
@@ -66,7 +69,13 @@ byte    gDataSerial    = 0;         // gData array index used by serial input
 byte    gDataExe       = 0;         // gData array index used by command processor (state 4)
 int     gState         = 0;         // State machine
 int     gBatVolt[2]    = {0,0};     // Actual battery voltage
-int     gRotary[2][5]  = {{0,99,0,MAXANALOG / ((DATA_POS - 1) * 2),A0},{0,99,0,MAXANALOG / ((SYS_POS - 1) * 2),A1}};
+int     gRotary[5][5]  = {
+  {0,99,0,MAXANALOG / ((DATA_POS - 1) * 2),A0},   // Rotary DISPLAY DATA
+  {0,99,0,MAXANALOG / ((SYS_POS - 1) * 2),A1},    // Rotary DISPLAY SYS
+  {0,99,0,MAXANALOG / ((IR1_POS - 1) * 2),A2},    // Rotary IR1
+  {0,99,0,MAXANALOG / ((IR2_POS - 1) * 2),A3},    // Rotary IR2
+  {0,99,0,MAXANALOG / ((IR3_POS - 1) * 2),A4}     // Rotary IR3
+};
 int     gRotaryWait    = 0;         // indicates which rotary switch waits for ACK/NAK
 
 /*
@@ -223,8 +232,8 @@ int fRotaryRead(int state){
   int newState = state;
   int val = 0;
   char data[40];
-  // read rotary of 'DATA' and 'SYS'
-  for (int i=0; i <= 1; i++){
+  // read rotary of 'DATA' ,'SYS', 'IR1', 'IR2', and 'IR3'
+  for (int i=0; i < 5; i++){
     val = analogRead(gRotary[i][ROTARY_ADDR]);
     // Calculate new rotary position based on analog value
     gRotary[i][ROTARY_NEWVAL] = (((10 * val) / (2 * gRotary[i][ROTARY_RANGE])) + 5) / 10;
