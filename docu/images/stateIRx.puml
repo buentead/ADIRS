@@ -1,0 +1,21 @@
+@startuml
+scale 800*600
+hide empty description
+[*] --> State1
+State1 : IRx OFF
+State1 --> State2 : rcvRotaryNAV
+State2 : IRx NAV aligning
+State2 --> State3 : rcvIRAligned
+State3 : IRx NAV
+State3 --> State4 : rcvRotaryATT
+State4 : IRx ATT
+State4 --> State2 : rcvRotaryNAV
+State2 --> State5 : rcvRotaryOFF
+State3 --> State5 : rcvRotaryOFF
+State5 : "Realn Desn" (5..0)
+State5 --> State2 : rcvRotaryNAV
+State5 --> State6 : timeout5sec
+State6 : "Off Time" (5..0)
+State6 --> State1 : timeout5sec
+State6 --> State2 : rcvRotaryNAV
+@enduml
