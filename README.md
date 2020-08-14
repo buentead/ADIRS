@@ -1,7 +1,8 @@
 # ADIRS, BAT, Triple Gauge
 This project relates to an Airbus A320 home built cockpit. It covers the following instruments:
 - Battery: BAT1 and BAT2 displays in the overhead panel
-- ADIRS (Air Data Inertial Reference System): The display and the `DATA` and `SYS` rotary switches in the overhead panel.
+- ADIRS (Air Data Inertial Reference System): The display and the rotary switches `DATA`, `SYS`, `IR1`, `IR2`, and `IR3` 
+in the overhead panel. 
 - Triple Gauge: drives three servos of a triple gauge such as from [Skalarki electronics Ltd](https://www.skalarki-electronics.eu/onlineshop/product/42-tripple-gauge.html).
 
 The full project documentation can be found [here](/docu/projectDocumentation.md).
