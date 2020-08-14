@@ -57,7 +57,7 @@ end
 
 -- Magnetic Track (in degree)
 function evtTrueTrack(pOffset, pValue)
-    adirs.evtTrueTrack(math.floor(math.deg(pValue) + 0.5))
+    adirs.evtTrueTrack(math.floor((math.deg(pValue) * 10) + 0.5) / 10)
 end
 
 -- Ground Speed (knots)
@@ -71,7 +71,7 @@ function evtPosLAT(pOffset, pValue)
     -- Latitude in degrees
     local _posLat = pValue * 90.0 / ( 10001750.0 * 65536.0 * 65536.0 )
     local _latG = math.floor(_posLat)
-    local _latM = (_posLat - _latG) * 60
+    local _latM = math.floor(((_posLat - _latG) * 60 * 10) + 0.5) / 10
     if _posLat > 0 then _latO = "N" else _latO = "S" end
     adirs.evtPPos('LAT', _latO, _latG, _latM)
 end
@@ -82,7 +82,7 @@ function evtPosLON(pOffset, pValue)
     -- Longitude in Grad
     local _posLon = pValue * 360.0 / ( 65536.0 * 65536.0 * 65536.0 * 65536.0 )
     local _lonG = math.floor(_posLon)
-    local _lonM = (_posLon - _lonG) * 60
+    local _lonM = math.floor(((_posLon - _lonG) * 60 * 10) + 0.5) / 10
     if _posLon > 0 then _lonO = "E" else _lonO = "W" end
     adirs.evtPPos('LON', _lonO, _lonG, _lonM)
 end
@@ -99,8 +99,7 @@ end
 
 -- True Heading
 function evtHeading(pOffset, pValue)
-    local _magHeading = math.floor((pValue * 360 / (65536 * 65536)) - gMagVar + 0.5)
-    if _magHeading < 0 then _magHeading = _magHeading + 360 end
+    local _magHeading = math.floor((pValue * 360 / (65536 * 65536) * 10) + 0.5) / 10
     adirs.evtHeading(_magHeading)
 end
 

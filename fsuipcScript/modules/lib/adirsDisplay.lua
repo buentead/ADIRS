@@ -13,7 +13,7 @@ local _displayNoMsg = 'STS - NONE'
 local _displayEnter = 'STS - ENTER PPOS'
 local _displayTTN   = 'HEADING --.-`     TTN %i'
 local _displayRealn = 'REALN DESN %i SEC'
-local _displayOFFt  = 'OFF time %i SEC'
+local _displayOFFt  = 'OFF TIME %i SEC'
 local _iruOFF       = 1
 local _iruNAV       = 2
 local _iruATT       = 3
@@ -33,17 +33,17 @@ local _display = {                                 -- in Flight Simulator data a
 }
 local _displayOn = {'',''}                          -- 1-DATA, 2-SYS
 local _stateAdir = {1,0}                            -- status, timeout
-local _stateIR   = {IR1 = {3,0,0}, IR2 = {3,0,0}, IR3 = {3,0,0}}  -- status, timeout/interval, counter
+local _stateIR   = {IR1 = {1,0,0}, IR2 = {1,0,0}, IR3 = {1,0,0}}  -- status, timeout/interval, counter
                                                     -- states: 1-OFF, 2-NAV aligning, 3-NAV, 4-ATT, 5-REALN, 6-OFFtim
 local _timeout   = 1                                -- timeout in seconds
 local _timeoutIR = 5                                -- timeout of IRUx power down
-local _timeoutA1 = 7                                -- minutes to align IRU
+local _timeoutA1 = 8                                -- minutes to align IRU
 local _timeoutA2 = 1                                -- 1 minute to align IRU (fast allign between legs)
 local _fProcessACK = 0
 local _fProcessNAK = 0
 
 -- instance values
-local _trueTrack   = 0.0
+local _trueTrack   = -0.1
 local _groundSpeed = 0
 local _ppos        = {LAT = {'N',0,0.0}, LON = {'E',0,0.0} }
 local _windKn      = 0
@@ -92,6 +92,11 @@ local function _getStatusIRU(iru)
     return _stateIR[iru][1]
 end
 
+-- Get current IRUx Status Time Out
+local function _getStatusTimeoutIRU(iru)
+    return _stateIR[iru][2]
+end
+
 -- Check if status has timed out
 local function _checkStatusTimeout()
     if os.clock() > _stateAdir[2] then
@@ -107,6 +112,7 @@ end
 -- Check if IRx is powering OFF
 local function _checkIRUPowerDown(iru)
     local _updRequired
+    local _statusNew = _getStatus()
     for k, v in pairs(_stateIR) do
         _updRequired = false
         if v[1] == 5 and v[3] == 0 then
@@ -119,7 +125,7 @@ local function _checkIRUPowerDown(iru)
             _updRequired = true
         elseif (v[1] == 5 or v[1] == 6) and os.clock() > v[2] then
             -- countdown of power off sequence
-            _stateIR[k][3] = _stateIR[k][3] - 1
+            _stateIR[k][3] = v[3] - 1
             _stateIR[k][2] = os.clock() + 1
             _updRequired = true
         elseif v[1] == 2 and v[3] > 0 and os.clock() > v[2] then
@@ -128,9 +134,15 @@ local function _checkIRUPowerDown(iru)
             _stateIR[k][2] = os.clock() + 60
             _updRequired = true
         end
-        if _displayOn[2] == k and _updRequired then _setStatus(2) end
+        if _displayOn[2] == k and _updRequired then
+            if _statusNew == 4 then
+                _statusNew = _setStatus(5)
+            elseif _statusNew == 6 then
+                _statusNew = _setStatus(2)
+            end
+        end
     end
-    return _getStatus()
+    return _statusNew
 end
 
 -- ----------------------------------------------------
@@ -240,21 +252,39 @@ local function _sndADIRSInfo()
     _checkStatusTimeout()
     if _getStatus() == 2 then
 
+        -- DATA set to 'TEST'
+        if _displayOn[1] == 'TEST' then
+            _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. _display[_displayOn[1]])
+
         -- IRU is OFF
-        if _stateIR[_displayOn[2]][1] == 1 then
+        elseif _stateIR[_displayOn[2]][1] == 1 then
             _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD, ')
 
-        -- IRU is aligning or in ATT mode
-        elseif _stateIR[_displayOn[2]][1] == 2 or _stateIR[_displayOn[2]][1] == 4 then
+        -- IRU is aligning
+        elseif _stateIR[_displayOn[2]][1] == 2 then
             if _displayOn[1] == 'HDG' then
                 _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. string.format(_displayTTN, _stateIR[_displayOn[2]][3]))
+            elseif _displayOn[1] == 'STS' then
+                _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. _displayEnter)
             else
                 _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. _displayAlign)
             end
 
         -- IRU is aligned (NAV mode)
         elseif _stateIR[_displayOn[2]][1] == 3 then
-            _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. _display[_displayOn[1]])
+            if _displayOn[1] == 'STS' then
+                _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. _displayNoMsg)
+            else
+                _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. _display[_displayOn[1]])
+            end
+
+        -- IRU is in ATT mode
+        elseif _stateIR[_displayOn[2]][1] == 4 then
+            if _displayOn[1] == 'STS' then
+                _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. _displayNoMsg)
+            else
+                _msg,_rc = _serial.sndData(adirsDisplay, '$FSLCD,' .. _displayAlign)
+            end
 
         -- Power Down - realign
         elseif _stateIR[_displayOn[2]][1] == 5 then
@@ -312,7 +342,7 @@ end
 -- -----------
 local function _updTKGS()
     local _statusNew
-    _display['TKGS'] = string.format('TK %03i` %3iKTS', _trueTrack, _groundSpeed)
+    _display['TKGS'] = string.format('TK %05.1f` %3iKTS', _trueTrack, _groundSpeed)
     _statusNew = _rcvFSUpdShown('TKGS')
     return _statusNew
 end
@@ -349,7 +379,7 @@ local function _evtPPos(coord,coordO,coordG,coordM)
         _ppos[coord][1] = coordO
         _ppos[coord][2] = coordG
         _ppos[coord][3] = coordM
-        _display['PPOS'] = string.format("%s%3i`%5.2f'  %s%03i`%5.2f'",
+        _display['PPOS'] = string.format(" %s%3i`%4.1f'  %s%03i`%4.1f'",
             _ppos['LAT'][1], _ppos['LAT'][2], _ppos['LAT'][3],
             _ppos['LON'][1], _ppos['LON'][2], _ppos['LON'][3]
         )
@@ -399,7 +429,7 @@ local function _evtHeading(deg)
     local _statusNew = _getStatus()
     if _trueHeading ~= deg then
         _trueHeading = deg
-        _display['HDG'] = string.format('HEADING %03i`', _trueHeading)
+        _display['HDG'] = string.format('HEADING %05.1f`', _trueHeading)
         _statusNew = _rcvFSUpdShown('HDG')
     end
     return _display['HDG'], _statusNew
@@ -410,7 +440,8 @@ end
 -- ----------------------
 local function _rcvIRAligned(iru, aligned)
     local _statusNew = _getStatus()
-    if aligned and _getStatusIRU(iru) == 2 then
+    -- Check Status Timeout to allow IRx ALIGN LED to turn on
+    if aligned and _getStatusIRU(iru) == 2 and os.clock() > (_getStatusTimeoutIRU(iru) - 59) then
         _setStatusIRU(iru, 3)
         _statusNew = _rcvFSUpdShown(iru)
     end
@@ -439,6 +470,7 @@ adirsDisplay = {
     evtWindDeg          = _evtWindDeg,
     evtHeading          = _evtHeading,
     getStatus           = _getStatus,
+    getStatusIRU        = _getStatusIRU,
     __setStatusIRU      = _setStatusIRU         -- for unit testing only!
 }
 return adirsDisplay
