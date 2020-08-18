@@ -1,5 +1,5 @@
 ## Protocol
-This section describes the protocol used between the Arduino board and the LUA script on the PC.
+This section describes the protocol used between the Arduino board and the LUA script off the PC.
 
 ### Data Link Layer
 The Ethernet shield cannot be used due to the limitation of digital and analog I/O's of the 
@@ -36,8 +36,8 @@ A sample message structure shown below:
 - The next maximum five characters identify the talker ('AD' Arduino, 'FS' FlightSim) and
 the type of message (two to three characters).
 - All data fields are comma-delimited.
-- At least one byte must be included in a data field.
-- The message ends with 0x0D (CR) and 0x0A (LF)
+- At least one byte must be included in a data field if present.
+- The message ends with 0x0D (CR) and 0x0A (LF).
 
 The following example shows the rotary position sent from the Arduino to the PC:
 - `$ADROT,0,1\r\n`
@@ -76,8 +76,8 @@ The LUA script implements the following communication states:
 |$|FSBA1|,|`^[0-9]{4}$`               |\r\n|Battery1 voltage (*10), e.g. 0238 for 23.8 volts|
 |$|FSBA2|,|`^[0-9]{4}$`               |\r\n|Battery1 voltage (*10), e.g. 0238 for 23.8 volts|
 |$|FSROW|,|`^[\x20-\x7e]{0,24}$`      |\r\n|Display text in ADIRS|
-|$|FSOFF|,|`^(LCD&vert;BA1&vert;BA2)$`|\r\n|Switch OFF ADIRS, battery1, or battery2 display|
-|$|FSON |,|`^(LCD&vert;BA1&vert;BA2)$`|\r\n|Switch OFF ADIRS, battery1, or battery2 display|
+|$|FSOFF|,|`^(LCD\|BA1\|BA2)$`|\r\n|Switch OFF ADIRS, battery1, or battery2 display|
+|$|FSON |,|`^(LCD\|BA1\|BA2)$`|\r\n|Switch OFF ADIRS, battery1, or battery2 display|
 |$|FSTGV|,|0-255,0-255,0-255          |\r\n|Triple gauge servo values (0-255)<br>1. value: ACCU<br>2. value: BREAK left<br>3. value: BREAK right|
 |$|ADACK| |                           |\r\n|Arduino confirms message received|
 |$|ADNAK| |                           |\r\n|Arduino rejects received message|
