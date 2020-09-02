@@ -4,7 +4,8 @@ hide empty description
 skinparam componentStyle uml2
 
 package "FSUIPC" {
-    [FSUIPC offset change]
+    [FSUIPC offset change event]
+    [FMGS offset set]
     package "LUA Script"{
         [ADIRS]
         [adirsDisplay]<<modules>>
@@ -14,7 +15,8 @@ package "FSUIPC" {
         [sendReceiveData]<<modules>>
         [tripleGauge]<<modules>>
     }
-    [FSUIPC offset change] --> [ADIRS]
+    [FMGS offset set] <-- [rotary]
+    [FSUIPC offset change event] --> [ADIRS]
 }
 
 package "Arduino" {
