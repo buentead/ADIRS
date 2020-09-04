@@ -19,6 +19,7 @@ local _iruNAV       = 2
 local _iruATT       = 3
 
 -- internal variables
+local _rcvIRAligned                                 -- forward declaration
 local _serial
 local _rotData = {'TEST','TKGS','PPOS','WIND','HDG','STS' }
 local _rotSys  = {'OFF','IR1','IR3','IR2' }
@@ -133,6 +134,10 @@ local function _checkIRUPowerDown(iru)
             _stateIR[k][3] = _stateIR[k][3] - 1
             _stateIR[k][2] = os.clock() + 60
             _updRequired = true
+        elseif v[1] == 2 and v[3] == 0 and os.clock() > v[2] then
+            -- IRU alignment timed out --> assume aligned
+            _statusNew = _rcvIRAligned(k, true)
+            _updRequired = true
         end
         if _displayOn[2] == k and _updRequired then
             if _statusNew == 4 then
@@ -156,6 +161,19 @@ local function _rcvFSUpdShown(rcvData)
         elseif _statusNew == 6 then
             _statusNew = _setStatus(2)
         end
+    end
+    return _statusNew
+end
+
+-- ----------------------
+-- IRx alignment received
+-- ----------------------
+function _rcvIRAligned(iru, aligned)
+    local _statusNew = _getStatus()
+    -- Check Status Timeout to allow IRx ALIGN LED to turn on
+    if aligned and _getStatusIRU(iru) == 2 and os.clock() > (_getStatusTimeoutIRU(iru) - 59) then
+        _setStatusIRU(iru, 3)
+        _statusNew = _rcvFSUpdShown(iru)
     end
     return _statusNew
 end
@@ -433,19 +451,6 @@ local function _evtHeading(deg)
         _statusNew = _rcvFSUpdShown('HDG')
     end
     return _display['HDG'], _statusNew
-end
-
--- ----------------------
--- IRx alignment received
--- ----------------------
-local function _rcvIRAligned(iru, aligned)
-    local _statusNew = _getStatus()
-    -- Check Status Timeout to allow IRx ALIGN LED to turn on
-    if aligned and _getStatusIRU(iru) == 2 and os.clock() > (_getStatusTimeoutIRU(iru) - 59) then
-        _setStatusIRU(iru, 3)
-        _statusNew = _rcvFSUpdShown(iru)
-    end
-    return _statusNew
 end
 
 -- ----------------------------------
